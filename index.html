@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LTX — The world model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --retake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --retake-slow-ease: cubic-bezier(0.65, 0, 0.35, 1);
+}
+*{ margin:0; padding:0; box-sizing:border-box; }
+html, body{ height:100%; }
+body{
+  font-family:'Manrope', system-ui, sans-serif;
+  background:#000;
+  color:#fff;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+::selection{ background: rgba(255,255,255,0.2); }
+:focus-visible{ outline:2px solid #fff; outline-offset:3px; }
+button{ font-family:inherit; color:inherit; }
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
+
+/* ---------- STAGE ---------- */
+.stage{
+  position:relative; isolation:isolate;
+  width:100%; height:100vh; height:100dvh;
+  overflow:hidden; background:#000;
+}
+
+/* ---------- MEDIA LAYERS ---------- */
+.media{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover; object-position:center;
+  z-index:0; pointer-events:none;
+  visibility:hidden;
+}
+.media.is-visible{ visibility:visible; }
+
+/* ---------- HERO ---------- */
+.hero{ position:absolute; inset:0; z-index:10; pointer-events:none; }
+.hero h1{
+  position:absolute; top:35.9%; left:50%;
+  transform:translateX(-50%);
+  width:min(901px, calc(100vw - 48px));
+  font-size:clamp(62px, 6.8vw, 100px);
+  font-weight:500; line-height:0.8;
+  letter-spacing:-0.04em; white-space:nowrap;
+  text-shadow:0 2px 12px rgb(0 0 0 / 0.14);
+  display:flex; gap:0.24em; justify-content:center;
+}
+.hero h1 span{
+  display:inline-block;
+  transition: opacity 900ms var(--retake-ease),
+              filter 900ms var(--retake-ease),
+              transform 900ms var(--retake-ease);
+}
+.hero h1 span:nth-child(1){ transition-delay:0ms; }
+.hero h1 span:nth-child(2){ transition-delay:90ms; }
+.hero h1 span:nth-child(3){ transition-delay:180ms; }
+.stage.title-hidden .hero h1 span{
+  opacity:0; filter:blur(12px); transform:translateY(-10px);
+}
+.hero p{
+  position:absolute; top:calc(46.78% + 94px); left:50%;
+  transform:translateX(-50%);
+  width:min(734px, calc(100vw - 48px));
+  font-size:clamp(14px, 1.25vw, 18px);
+  font-weight:400; line-height:1.2; letter-spacing:-0.04em;
+  text-align:center;
+  text-shadow:0 1px 8px rgb(0 0 0 / 0.16);
+}
+
+/* ---------- CONTROLLER ---------- */
+.controller{
+  position:absolute; top:46.78%; left:50%;
+  transform:translateX(-50%);
+  width:min(880px, calc(100vw - 48px));
+  height:72px; z-index:20;
+  --cap-left:-5px;
+  --cap-width:calc(20% + 5px);
+  --glass-x:24%;
+  --glass-y:8%;
+}
+.glass{ position:absolute; pointer-events:none; }
+.glass::before, .glass::after{
+  content:''; position:absolute; inset:0;
+  border-radius:inherit; pointer-events:none;
+}
+.glass::before{
+  background:
+    radial-gradient(120% 150% at var(--glass-x,24%) var(--glass-y,8%),
+      rgb(255 255 255 / 0.25), rgb(255 255 255 / 0) 53%),
+    linear-gradient(115deg, rgb(255 255 255 / 0.10), rgb(255 255 255 / 0) 42%);
+}
+.glass::after{
+  padding:1px;
+  background: conic-gradient(from 225deg,
+    #7fe3ff, rgb(255 255 255 / 0.35), #ffffff,
+    #ffd7e6, rgb(255 255 255 / 0.35), #7fe3ff);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+          mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+}
+.track{
+  top:4px; left:0; width:100%; height:64px;
+  border-radius:999px;
+  background: rgb(24 55 82 / 0.31);
+  border:1px solid rgb(255 255 255 / 0.2);
+  -webkit-backdrop-filter: blur(9px) saturate(126%) contrast(108%) brightness(103%);
+          backdrop-filter: blur(9px) saturate(126%) contrast(108%) brightness(103%);
+  box-shadow:
+    0 14px 38px rgb(4 24 43 / 0.16),
+    0 2px 7px rgb(4 24 43 / 0.1),
+    inset 1px 1px 0 rgb(255 255 255 / 0.48),
+    inset -1px -1px 0 rgb(21 49 73 / 0.14),
+    inset 0 0 0 0.5px rgb(255 255 255 / 0.16);
+  transition: left 980ms var(--retake-slow-ease),
+              width 980ms var(--retake-slow-ease),
+              opacity 400ms linear;
+  opacity:1;
+}
+.track::after{ opacity:0.27; }
+.capsule{
+  position:absolute;
+  left: var(--cap-left, -5px);
+  width: var(--cap-width, calc(20% + 5px));
+  top:-1px; height:72px;
+  border-radius:999px;
+  background: rgb(246 251 255 / 0.24);
+  border:1px solid rgb(255 255 255 / 0.28);
+  -webkit-backdrop-filter: blur(13px) saturate(128%) contrast(107%) brightness(105%);
+          backdrop-filter: blur(13px) saturate(128%) contrast(107%) brightness(105%);
+  box-shadow:
+    0 11px 28px rgb(4 24 43 / 0.17),
+    0 2px 6px rgb(4 24 43 / 0.1),
+    inset 1px 1px 0 rgb(255 255 255 / 0.62),
+    inset -1px -1px 0 rgb(20 49 73 / 0.18),
+    inset 0 0 12px rgb(255 255 255 / 0.055);
+  pointer-events:none; z-index:1;
+  transition: left 620ms var(--retake-ease),
+              width 620ms var(--retake-ease),
+              top 980ms var(--retake-slow-ease),
+              height 980ms var(--retake-slow-ease),
+              background 500ms linear,
+              opacity 300ms linear,
+              transform 980ms var(--retake-slow-ease);
+}
+.capsule::after{ opacity:0.30; }
+.cells{
+  position:absolute; inset:0;
+  display:grid; grid-template-columns:repeat(5, 1fr);
+  align-items:center; z-index:2;
+}
+.cell{
+  display:flex; align-items:center; justify-content:center;
+  height:100%; padding:0 14px;
+  font-size:23px; font-weight:400; line-height:1.2;
+  letter-spacing:-0.04em; white-space:nowrap;
+  background:transparent; border:0; border-radius:999px;
+  cursor:pointer;
+  transition: opacity 420ms var(--retake-ease),
+              filter 420ms var(--retake-ease),
+              transform 980ms var(--retake-slow-ease);
+  will-change:transform, opacity, filter;
+}
+.cell-static{ cursor:default; transition: opacity 300ms linear; }
+.cell:disabled{ cursor:default; }
+.controller.hovering .cell-static{ opacity:0.5; }
+.cell.is-reset{
+  text-decoration:underline;
+  text-underline-offset:3px;
+  text-decoration-thickness:1px;
+  animation: resetReveal 520ms var(--retake-ease);
+}
+@keyframes resetReveal{
+  from{ opacity:0; filter:blur(10px); }
+  to{ opacity:1; filter:blur(0); }
+}
+.controller.busy .capsule{
+  transition: left 980ms var(--retake-slow-ease),
+              width 980ms var(--retake-slow-ease),
+              background 600ms linear,
+              opacity 300ms linear;
+}
+.controller.collapsed .capsule{
+  --cap-left: calc(50% - 100px);
+  --cap-width: 200px;
+  background: rgb(246 251 255 / 0.14);
+}
+.controller.collapsed .track{
+  left: calc(50% - 96px);
+  width: 192px;
+  opacity:0;
+  transition: left 980ms var(--retake-slow-ease),
+              width 980ms var(--retake-slow-ease),
+              opacity 400ms linear 650ms;
+}
+
+/* ---------- HEADER ---------- */
+.site-header{
+  position:absolute; top:0; left:0; right:0;
+  z-index:30;
+  display:grid; grid-template-columns:auto 1fr auto;
+  align-items:center;
+  padding: calc(58px + env(safe-area-inset-top)) 40px 40px;
+  text-shadow:0 1px 6px rgb(0 0 0 / 0.18);
+  pointer-events:none;
+}
+.site-header a{ pointer-events:auto; }
+.brand{ display:flex; align-items:center; }
+.logo{ display:inline-flex; align-items:center; }
+.logo svg{ height:24px; width:auto; display:block; }
+.meta{
+  display:flex;
+  margin-left:clamp(48px, 5vw, 70px);
+  gap:clamp(28px, 3vw, 44px);
+  font-size:18px; line-height:1.2; letter-spacing:-0.04em;
+}
+.try-now{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:152px; height:38px; border-radius:999px;
+  border:1px solid rgb(255 255 255 / 0.75);
+  background:transparent; color:#fff;
+  font-size:18px; font-weight:500; letter-spacing:-0.04em;
+  text-decoration:none;
+  transition: background 300ms linear, color 300ms linear, border-color 300ms linear;
+}
+.try-now:hover, .try-now:focus-visible{
+  background:#fff; color:#0b1a26; border-color:#fff;
+}
+
+/* ---------- NOTICE ---------- */
+.notice{
+  position:absolute; left:50%; bottom:28px;
+  transform:translateX(-50%); z-index:40;
+  display:none; align-items:center; gap:14px;
+  padding:12px 12px 12px 20px;
+  border-radius:999px;
+  background: rgb(24 55 82 / 0.55);
+  border:1px solid rgb(255 255 255 / 0.22);
+  -webkit-backdrop-filter: blur(10px);
+          backdrop-filter: blur(10px);
+  font-size:14px; letter-spacing:-0.02em;
+  max-width:calc(100vw - 32px);
+}
+.notice.is-visible{ display:flex; }
+.notice-retry{
+  border:0; border-radius:999px;
+  padding:8px 16px; background:#fff; color:#0b1a26;
+  font-size:14px; font-weight:600; cursor:pointer;
+  white-space:nowrap;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:900px){
+  .site-header{ padding: calc(24px + env(safe-area-inset-top)) 24px 24px; }
+  .meta{ font-size:14px; gap:22px; margin-left:34px; }
+  .try-now{ width:116px; height:36px; font-size:14px; }
+  .cell{ font-size:clamp(17px, 2.5vw, 24px); }
+}
+@media (max-width:700px){
+  .site-header{ padding-left:18px; padding-right:18px; }
+  .logo svg{ height:21px; }
+  .meta{ font-size:12px; gap:16px; margin-left:24px; }
+  .meta-2{ display:none; }
+  .try-now{ width:92px; height:34px; font-size:13px; position:relative; }
+  .try-now::after{ content:''; position:absolute; inset:-6px -10px; border-radius:999px; }
+  .hero h1{
+    top:34%; width:calc(100vw - 40px);
+    font-size:clamp(48px, 14vw, 64px);
+    line-height:0.88; white-space:normal;
+    flex-wrap:wrap; gap:0.22em;
+  }
+  .hero p{ top:77%; width:calc(100vw - 44px); font-size:14px; }
+  .controller{ top:53%; width:calc(100vw - 40px); height:156px; }
+  .track{ top:0; height:156px; border-radius:28px; }
+  .cells{ grid-template-columns:repeat(2, 1fr); grid-template-rows:48px 54px 54px; }
+  .cell{ font-size:17px; padding:0 8px; border-radius:0; }
+  .cell-static{ grid-column:1 / -1; }
+  .cell:nth-child(n+2){ border-top:1px solid rgb(255 255 255 / 0.12); }
+  .cell:nth-child(2), .cell:nth-child(4){ border-right:1px solid rgb(255 255 255 / 0.12); }
+  .capsule{ opacity:0; pointer-events:none; }
+  .controller.collapsed .capsule{
+    opacity:1; left:50%;
+    top:4vh; top:4dvh;
+    width:196px; height:64px;
+    border-radius:999px;
+    background: rgb(246 251 255 / 0.18);
+    transform:translate(-50%, -50%);
+  }
+}
+@media (max-width:700px) and (max-height:700px){
+  .controller{ top:50%; }
+  .hero p{ top:calc(50% + 168px); width:calc(100vw - 32px); font-size:13px; }
+}
+@media (max-height:520px) and (orientation:landscape){
+  .hero h1{ top:20%; font-size:clamp(34px, 8vh, 56px); }
+  .controller{ top:50%; }
+  .hero p{ top:auto; bottom:8px; font-size:13px; }
+}
+@media (max-width:700px) and (max-height:520px) and (orientation:landscape){
+  .hero h1{ top:12%; font-size:clamp(28px, 7vh, 44px); }
+  .controller{ top:46%; height:118px; }
+  .track{ height:118px; }
+  .cells{ grid-template-rows:36px 41px 41px; }
+  .cell{ font-size:15px; }
+  .hero p{ bottom:6px; font-size:12px; }
+}
+@media (prefers-reduced-motion: reduce){
+  .capsule, .track, .cell, .hero h1 span, .try-now{
+    transition-duration:1ms !important;
+    transition-delay:0ms !important;
+  }
+  .capsule, .track{
+    -webkit-backdrop-filter:none !important;
+            backdrop-filter:none !important;
+  }
+  .cell, .hero h1 span{ filter:none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <!-- 8 persistent video layers -->
+  <video class="media" id="v-colorway-fwd" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-1.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-colorway-rev" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-1-reverse.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-scene-fwd"    src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-2.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-scene-rev"    src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-2-reverse.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-light-fwd"    src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-3.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-light-rev"    src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-3-reverse.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-fullLook-fwd" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-4.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+  <video class="media" id="v-fullLook-rev" src="https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/video-4-reverse.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+
+  <div class="hero">
+    <h1><span>The</span><span>world</span><span>model</span></h1>
+    <p>LTX builds open world models that give you full control, from production-grade video to systems that understand and operate in the physical world.</p>
+  </div>
+
+  <div class="controller" role="group" aria-label="Scene state controller">
+    <div class="track glass"></div>
+    <div class="capsule glass"></div>
+    <div class="cells">
+      <div class="cell cell-static" aria-hidden="true">Select state →</div>
+      <button class="cell" type="button" data-branch="scene" disabled>Scene</button>
+      <button class="cell" type="button" data-branch="light" disabled>Lighting</button>
+      <button class="cell" type="button" data-branch="colorway" disabled>Clothing</button>
+      <button class="cell" type="button" data-branch="fullLook" disabled>Cast</button>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="brand">
+      <a class="logo" href="https://ltx.io/" aria-label="LTX home" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 75 32" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
+          <path d="M0 4h6.5v21.5H18V32H0V4Z" fill="#ffffff"/>
+          <path d="M20 4h20v7.5h-6.75V32h-6.5V11.5H20V4Z" fill="#ffffff"/>
+          <path d="M44 4h7l7.5 10.6L66 4h7l-10.4 13.6L73.5 32h-7L58.5 21.2 50.5 32h-7l10.9-14.4L44 4Z" fill="#ffffff"/>
+        </svg>
+      </a>
+      <div class="meta">
+        <span>LTX-2.5 is here</span>
+        <span class="meta-2">Smarter. Faster</span>
+      </div>
+    </div>
+    <div></div>
+    <a class="try-now" href="https://app.ltx.io/" target="_blank" rel="noopener noreferrer">Try now</a>
+  </header>
+
+  <div class="sr-only" role="status" aria-live="polite" id="status"></div>
+  <div class="notice" role="alert">
+    <span class="notice-text"></span>
+    <button class="notice-retry" type="button">Retry</button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var BASE = 'https://pub-86dc5b5484314368ac5436a674b0d919.r2.dev/designs/';
+
+  var BRANCHES = ['scene', 'light', 'colorway', 'fullLook'];
+  var LABELS = { scene: 'Scene', light: 'Lighting', colorway: 'Clothing', fullLook: 'Cast' };
+
+  var HOLD_DEFAULT = 0.08;
+  var HOLD_SCENE_REVERSE = 0.18;
+  var FRAME_TIMEOUT = 12000;
+
+  var CAP_POS = [
+    ['-5px', 'calc(20% + 5px)'],
+    ['20%', '20%'],
+    ['40%', '20%'],
+    ['60%', '20%'],
+    ['80%', 'calc(20% + 5px)']
+  ];
+
+  var stage = document.querySelector('.stage');
+  var controller = document.querySelector('.controller');
+  var capsule = document.querySelector('.capsule');
+  var cells = Array.prototype.slice.call(document.querySelectorAll('.cell'));
+  var statusEl = document.getElementById('status');
+  var notice = document.querySelector('.notice');
+  var noticeText = document.querySelector('.notice-text');
+  var noticeRetry = document.querySelector('.notice-retry');
+
+  var vids = {};
+  var allVideos = [];
+  BRANCHES.forEach(function (b) {
+    vids[b] = {
+      fwd: document.getElementById('v-' + b + '-fwd'),
+      rev: document.getElementById('v-' + b + '-rev')
+    };
+    allVideos.push(vids[b].fwd, vids[b].rev);
+  });
+
+  var BASE_VIDEO = vids.colorway.fwd;
+
+  var buttons = {};
+  BRANCHES.forEach(function (b) {
+    buttons[b] = document.querySelector('.cell[data-branch="' + b + '"]');
+  });
+
+  var state = { scene: 'base', lock: false, token: 0, current: null };
+  var hadFocus = false;
+  var uiTimers = [];
+
+  function clearUITimers() {
+    for (var i = 0; i < uiTimers.length; i++) window.clearTimeout(uiTimers[i]);
+    uiTimers = [];
+  }
+  function later(fn, ms) {
+    var id = window.setTimeout(function () {
+      var ix = uiTimers.indexOf(id);
+      if (ix > -1) uiTimers.splice(ix, 1);
+      fn();
+    }, ms);
+    uiTimers.push(id);
+    return id;
+  }
+  function announce(msg) {
+    statusEl.textContent = '';
+    window.setTimeout(function () { statusEl.textContent = msg; }, 40);
+  }
+  function showNotice(msg) {
+    noticeText.textContent = msg;
+    notice.classList.add('is-visible');
+  }
+  function hideNotice() {
+    notice.classList.remove('is-visible');
+    noticeText.textContent = '';
+  }
+  function isReady(v) { return v && v.readyState >= 2; }
+  function branchReady(b) { return isReady(vids[b].fwd) && isReady(vids[b].rev); }
+
+  function showVideo(v) {
+    for (var i = 0; i < allVideos.length; i++) {
+      if (allVideos[i] !== v) allVideos[i].classList.remove('is-visible');
+    }
+    v.classList.add('is-visible');
+  }
+
+  function rewind(v) {
+    return new Promise(function (resolve) {
+      if (v.currentTime <= 0.001) { resolve(); return; }
+      var done = false;
+      function fin() {
+        if (done) return;
+        done = true;
+        v.removeEventListener('seeked', fin);
+        resolve();
+      }
+      v.addEventListener('seeked', fin);
+      try { v.currentTime = 0; } catch (e) { fin(); return; }
+      window.setTimeout(fin, 600);
+    });
+  }
+
+  function firstFrame(video, token) {
+    return new Promise(function (resolve, reject) {
+      var settled = false;
+      var rvfcId = null;
+      var rafId = null;
+      var timer = null;
+      var remaining = FRAME_TIMEOUT;
+      var lastTick = Date.now();
+
+      function cleanup() {
+        if (rvfcId !== null && video.cancelVideoFrameCallback) {
+          try { video.cancelVideoFrameCallback(rvfcId); } catch (e) {}
+          rvfcId = null;
+        }
+        if (rafId !== null) { window.cancelAnimationFrame(rafId); rafId = null; }
+        if (timer) { window.clearTimeout(timer); timer = null; }
+        document.removeEventListener('visibilitychange', onVis);
+      }
+      function done(ok, err) {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        if (ok) resolve(); else reject(err || new Error('first-frame-timeout'));
+      }
+      function stale() { return token !== state.token; }
+
+      function tick() {
+        if (settled) return;
+        if (stale()) { done(false, new Error('stale')); return; }
+        var now = Date.now();
+        if (!document.hidden) remaining -= (now - lastTick);
+        lastTick = now;
+        if (remaining <= 0) { done(false, new Error('first-frame-timeout')); return; }
+        timer = window.setTimeout(tick, 100);
+      }
+      function onVis() {
+        if (document.hidden) {
+          try { video.pause(); } catch (e) {}
+        } else {
+          try { video.play().catch(function () {}); } catch (e) {}
+        }
+      }
+
+      timer = window.setTimeout(tick, 100);
+      document.addEventListener('visibilitychange', onVis);
+
+      if (typeof video.requestVideoFrameCallback === 'function') {
+        var step = function (now, meta) {
+          if (settled) return;
+          if (stale()) { done(false, new Error('stale')); return; }
+          if (meta && meta.mediaTime <= 0.5 && video.readyState >= 2) {
+            done(true); return;
+          }
+          rvfcId = video.requestVideoFrameCallback(step);
+        };
+        rvfcId = video.requestVideoFrameCallback(step);
+      } else {
+        var attempts = 0;
+        var attempt = function () {
+          if (settled) return;
+          if (stale()) { done(false, new Error('stale')); return; }
+          attempts++;
+          var good = video.readyState >= 2 && !video.seeking && video.currentTime <= 0.5;
+          if (good && attempts > 1) { done(true); return; }
+          rafId = window.requestAnimationFrame(attempt);
+        };
+        rafId = window.requestAnimationFrame(attempt);
+      }
+    });
+  }
+
+  function monitorHold(video, holdSec, token) {
+    return new Promise(function (resolve) {
+      var settled = false;
+      var rafId = null;
+      function finish() {
+        if (settled) return;
+        settled = true;
+        if (rafId !== null) window.cancelAnimationFrame(rafId);
+        video.removeEventListener('ended', onEnded);
+        try { video.pause(); } catch (e) {}
+        resolve();
+      }
+      function onEnded() { finish(); }
+      function check() {
+        if (settled) return;
+        if (token !== state.token) {
+          settled = true;
+          video.removeEventListener('ended', onEnded);
+          return;
+        }
+        var d = video.duration;
+        if (d && isFinite(d) && d > 0 && video.currentTime >= d - holdSec) { finish(); return; }
+        if (video.ended) { finish(); return; }
+        rafId = window.requestAnimationFrame(check);
+      }
+      video.addEventListener('ended', onEnded);
+      rafId = window.requestAnimationFrame(check);
+    });
+  }
+
+  function setCapsule(i) {
+    var p = CAP_POS[i] || CAP_POS[0];
+    controller.style.setProperty('--cap-left', p[0]);
+    controller.style.setProperty('--cap-width', p[1]);
+    if (i > 0) controller.classList.add('hovering');
+    else controller.classList.remove('hovering');
+  }
+
+  function updateButtons() {
+    for (var i = 0; i < BRANCHES.length; i++) {
+      var b = BRANCHES[i];
+      var btn = buttons[b];
+      var ok = branchReady(b);
+      var isActive = (state.scene === b);
+      var selectable = (state.scene === 'base') && ok && !state.lock;
+      var enabled = (isActive && !state.lock) || selectable;
+      btn.disabled = !enabled;
+
+      if (state.scene !== 'base' && !isActive) {
+        btn.setAttribute('aria-hidden', 'true');
+        btn.setAttribute('tabindex', '-1');
+      } else {
+        btn.removeAttribute('aria-hidden');
+        btn.removeAttribute('tabindex');
+      }
+    }
+  }
+
+  function setResetLabel(btn, isReset) {
+    var b = btn.getAttribute('data-branch');
+    btn.textContent = isReset ? 'Reset' : LABELS[b];
+    if (isReset) {
+      btn.classList.remove('is-reset');
+      void btn.offsetWidth;
+      btn.classList.add('is-reset');
+    } else {
+      btn.classList.remove('is-reset');
+    }
+  }
+
+  function isMobileLayout() {
+    return window.matchMedia('(max-width: 700px)').matches;
+  }
+
+  function collapseUI(branch) {
+    var btn = buttons[branch];
+    var cr = controller.getBoundingClientRect();
+    var br = btn.getBoundingClientRect();
+
+    var capCenterY = isMobileLayout() ? (window.innerHeight * 0.04) : 35;
+
+    var dx = (cr.left + cr.width / 2) - (br.left + br.width / 2);
+    var dy = (cr.top + capCenterY) - (br.top + br.height / 2);
+
+    controller.classList.add('busy');
+    controller.classList.add('collapsed');
+
+    for (var i = 0; i < cells.length; i++) {
+      var c = cells[i];
+      if (c === btn) continue;
+      c.style.opacity = '0';
+      c.style.filter = 'blur(10px)';
+      c.style.transform = 'scale(0.94)';
+      c.style.pointerEvents = 'none';
+    }
+
+    btn.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+    btn.style.pointerEvents = 'none';
+  }
+
+  function expandUI(branch, token) {
+    var btn = buttons[branch];
+
+    controller.classList.add('busy');
+    controller.classList.remove('collapsed');
+    setCapsule(0);
+
+    btn.style.transition = 'opacity 300ms linear, filter 300ms linear, transform 980ms var(--retake-slow-ease)';
+    btn.style.opacity = '0';
+    btn.style.filter = 'blur(10px)';
+    btn.style.transform = 'none';
+
+    for (var i = 0; i < cells.length; i++) {
+      var c = cells[i];
+      if (c === btn) continue;
+      c.style.transition = 'opacity 760ms var(--retake-ease) 60ms, ' +
+                           'filter 760ms var(--retake-ease) 60ms, ' +
+                           'transform 980ms var(--retake-slow-ease) 60ms';
+      c.style.opacity = '1';
+      c.style.filter = 'none';
+      c.style.transform = 'none';
+      c.style.pointerEvents = '';
+    }
+
+    later(function () {
+      if (token !== state.token) return;
+      setResetLabel(btn, false);
+      btn.style.transition = 'opacity 760ms var(--retake-ease) 60ms, ' +
+                             'filter 760ms var(--retake-ease) 60ms, ' +
+                             'transform 980ms var(--retake-slow-ease) 60ms';
+      btn.style.opacity = '1';
+      btn.style.filter = 'none';
+      btn.style.transform = 'none';
+    }, 60);
+  }
+
+  function clearCellInlineStyles() {
+    for (var i = 0; i < cells.length; i++) {
+      var c = cells[i];
+      c.style.transition = '';
+      c.style.opacity = '';
+      c.style.filter = '';
+      c.style.transform = '';
+      c.style.pointerEvents = '';
+    }
+  }
+
+  function commitSelected(branch) {
+    state.scene = branch;
+    state.lock = false;
+    controller.classList.remove('busy');
+    setResetLabel(buttons[branch], true);
+    updateButtons();
+    if (hadFocus) {
+      try { buttons[branch].focus({ preventScroll: true }); } catch (e) {}
+    }
+    announce(LABELS[branch] + ' selected. Press Reset to return to the base scene.');
+  }
+
+  function commitBase(branch) {
+    state.scene = 'base';
+    state.lock = false;
+    controller.classList.remove('busy', 'collapsed');
+    stage.classList.remove('title-hidden');
+    clearCellInlineStyles();
+    setCapsule(0);
+    updateButtons();
+    if (hadFocus) {
+      try { buttons[branch].focus({ preventScroll: true }); } catch (e) {}
+    }
+    announce('Returned to the base scene.');
+  }
+
+  function handleFailure(err) {
+    state.lock = false;
+    controller.classList.remove('busy');
+    if (state.scene === 'base') {
+      controller.classList.remove('collapsed');
+      stage.classList.remove('title-hidden');
+      clearCellInlineStyles();
+      setCapsule(0);
+    }
+    updateButtons();
+    announce('Transition failed.');
+    showNotice('Playback failed — tap Retry to reset.');
+    console.warn('[LTX] transition failed:', err);
+  }
+
+  function startTransition(branch, direction) {
+    if (state.lock) return;
+    var s = state.scene;
+    if (direction === 'forward' && s !== 'base') return;
+    if (direction === 'reverse' && s === 'base') return;
+    if (direction === 'forward' && !branchReady(branch)) return;
+
+    clearUITimers();
+    hideNotice();
+
+    state.lock = true;
+    state.token++;
+    var token = state.token;
+    hadFocus = (document.activeElement === buttons[branch]);
+
+    var clip = vids[branch];
+    var video = (direction === 'forward') ? clip.fwd : clip.rev;
+    var from = state.current;
+
+    var hold = (direction === 'reverse' && branch === 'scene')
+      ? HOLD_SCENE_REVERSE : HOLD_DEFAULT;
+
+    if (direction === 'forward') {
+      collapseUI(branch);
+      var dur = (video.duration && isFinite(video.duration)) ? video.duration : 2.08;
+      later(function () { stage.classList.add('title-hidden'); },
+            Math.min(dur * 0.12, 0.9) * 1000);
+    } else {
+      expandUI(branch, token);
+    }
+
+    updateButtons();
+
+    if (from && from !== video) {
+      try { from.pause(); } catch (e) {}
+    }
+
+    announce(direction === 'forward'
+      ? 'Loading ' + LABELS[branch] + '…'
+      : 'Returning to the base scene…');
+
+    rewind(video).then(function () {
+      if (token !== state.token) throw new Error('stale');
+      var frameP = firstFrame(video, token);
+      var playP = video.play();
+      if (!playP || typeof playP.then !== 'function') playP = Promise.resolve();
+      return Promise.all([playP, frameP]);
+    }).then(function () {
+      if (token !== state.token) throw new Error('stale');
+      showVideo(video);
+      state.current = video;
+      announce(direction === 'forward'
+        ? LABELS[branch] + ' transition playing.'
+        : 'Reverse transition playing.');
+      return monitorHold(video, hold, token);
+    }).then(function () {
+      if (token !== state.token) return;
+      if (direction === 'forward') commitSelected(branch);
+      else commitBase(branch);
+    }).catch(function (err) {
+      if (token !== state.token) return;
+      handleFailure(err);
+    });
+  }
+
+  function onCellClick(branch) {
+    if (state.lock) return;
+    if (state.scene === 'base') startTransition(branch, 'forward');
+    else if (state.scene === branch) startTransition(branch, 'reverse');
+  }
+
+  BRANCHES.forEach(function (b, idx) {
+    var btn = buttons[b];
+    var gi = idx + 1;
+    btn.addEventListener('mouseenter', function () {
+      if (state.scene === 'base' && !state.lock) setCapsule(gi);
+    });
+    btn.addEventListener('focus', function () {
+      if (state.scene === 'base' && !state.lock) setCapsule(gi);
+    });
+    btn.addEventListener('click', function () { onCellClick(b); });
+  });
+
+  controller.addEventListener('mouseleave', function () {
+    if (state.scene !== 'base' || state.lock) return;
+    var a = document.activeElement;
+    if (a && controller.contains(a)) return;
+    setCapsule(0);
+  });
+  controller.addEventListener('focusout', function () {
+    window.setTimeout(function () {
+      if (state.scene !== 'base' || state.lock) return;
+      var a = document.activeElement;
+      if (a && controller.contains(a)) return;
+      setCapsule(0);
+    }, 0);
+  });
+  controller.addEventListener('pointermove', function (e) {
+    var r = controller.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    var x = ((e.clientX - r.left) / r.width) * 100;
+    var y = ((e.clientY - r.top) / r.height) * 100;
+    controller.style.setProperty('--glass-x', x + '%');
+    controller.style.setProperty('--glass-y', y + '%');
+  });
+
+  noticeRetry.addEventListener('click', function () {
+    hideNotice();
+    clearUITimers();
+    state.lock = false;
+    state.token++;
+    state.scene = 'base';
+    controller.classList.remove('busy', 'collapsed');
+    stage.classList.remove('title-hidden');
+    clearCellInlineStyles();
+    setCapsule(0);
+    for (var i = 0; i < allVideos.length; i++) {
+      try { allVideos[i].pause(); } catch (e) {}
+    }
+    rewind(BASE_VIDEO).then(function () {
+      showVideo(BASE_VIDEO);
+      state.current = BASE_VIDEO;
+      updateButtons();
+      announce('Reset to the base scene.');
+    });
+  });
+
+  /* ---- INIT: reveal the base frame as soon as it can decode ---- */
+  function revealBase() {
+    if (state.current) return;
+    rewind(BASE_VIDEO).then(function () {
+      try { BASE_VIDEO.pause(); } catch (e) {}
+      showVideo(BASE_VIDEO);
+      state.current = BASE_VIDEO;
+      updateButtons();
+      announce('Base scene ready.');
+    });
+  }
+
+  function watchReady() {
+    for (var i = 0; i < BRANCHES.length; i++) {
+      (function (b) {
+        var f = vids[b].fwd, r = vids[b].rev;
+        if (isReady(f) && isReady(r)) {
+          if (b === 'colorway') revealBase();
+          updateButtons();
+        } else {
+          var onReady = function () {
+            if (b === 'colorway' && isReady(f)) revealBase();
+            updateButtons();
+          };
+          if (!isReady(f)) f.addEventListener('loadeddata', onReady, { once: true });
+          if (!isReady(r)) r.addEventListener('loadeddata', onReady, { once: true });
+        }
+      })(BRANCHES[i]);
+    }
+  }
+
+  window.setTimeout(function () {
+    if (!state.current && isReady(BASE_VIDEO)) revealBase();
+    updateButtons();
+  }, 300);
+
+  watchReady();
+  updateButtons();
+  setCapsule(0);
+})();
+</script>
+</body>
+</html>
